@@ -81,7 +81,7 @@ Obtain the client certificate and profile files:
 ```
 cd /tmp
 wget https://www.privateinternetaccess.com/openvpn/openvpn.zip
-unzip openvpn.zip
+unzip -d openvpn openvpn.zip
 cd openvpn
 ```
 
@@ -106,9 +106,9 @@ Finally, modify the configuration file to use this credentials file, and to poin
 locations of the certificate and key:
 
 ```
-sed -i 's+^auth-user-pass+& /etc/openvpn/login' /etc/openvpn/${PROFILE}.ovpn
-sed -i 's+^ca ca.rsa.2048.crt+& /etc/openvpn/ca.rsa.2048.crt' /etc/openvpn/${PROFILE}.ovpn
-sed -i 's+^crl-verif crl.rsa.2048.pem+& /etc/openvpn/crl.rsa.2048.pem' /etc/openvpn/${PROFILE}.ovpn
+sed -i 's+^auth-user-pass+& /etc/openvpn/login+' /etc/openvpn/${PROFILE}.ovpn
+sed -i 's+^ca ca.rsa.2048.crt+& /etc/openvpn/ca.rsa.2048.crt+' /etc/openvpn/${PROFILE}.ovpn
+sed -i 's+^crl-verif crl.rsa.2048.pem+& /etc/openvpn/crl.rsa.2048.pem+' /etc/openvpn/${PROFILE}.ovpn
 ```
 
 ### Test that it works
