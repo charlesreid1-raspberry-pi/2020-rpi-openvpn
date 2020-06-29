@@ -111,6 +111,12 @@ sed -i 's+^ca ca.rsa.2048.crt+& /etc/openvpn/ca.rsa.2048.crt+' /etc/openvpn/${PR
 sed -i 's+^crl-verif crl.rsa.2048.pem+& /etc/openvpn/crl.rsa.2048.pem+' /etc/openvpn/${PROFILE}.ovpn
 ```
 
+### Update the Startup File
+
+```
+sed -s 's+\.conf+.ovpn+' /lib/systemd/system/openvpn@.service
+```
+
 ### Test that it works
 
 Test the VPN connection:
@@ -118,7 +124,7 @@ Test the VPN connection:
 Run `curl -4 icanhazip.com` before and after you bring the VPN up to verify your IP has changed:
 
 ```
-openvpn --config /etc/openvpn/${PROFILE}.conf
+openvpn --config /etc/openvpn/${PROFILE}.ovpn
 ```
 
 Use `curl -6 icanhazip.com` to test whether your IPv6 address has changed.
