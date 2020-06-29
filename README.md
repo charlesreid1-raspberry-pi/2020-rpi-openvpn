@@ -58,6 +58,22 @@ auto eth0
 iface eth0 inet dhcp
 ```
 
+Connect to a WPA network by editing `/etc/wpa_supplicant/wpa_supplicant.conf`:
+
+```
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+    ssid="<ssid-network-name>"
+    proto=RSN
+    key_mgmt=WPA-PSK
+    pairwise=CCMP TKIP
+    group=CCMP TKIP
+    psk="<ssid-network-passphrase>"
+}
+```
+
 ## Installing Software
 
 Once you have your network connection working,
