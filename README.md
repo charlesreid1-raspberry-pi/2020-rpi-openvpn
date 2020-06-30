@@ -74,6 +74,17 @@ network={
 }
 ```
 
+Add this to /etc/rc.local to reset the interface and connect to wifi on boot:
+
+```
+sleep 3
+ifdown wlan0
+sleep 3
+ifup wlan0
+sleep 3
+/sbin/wpa_supplicant   -i wlan0   -P /var/run/wpa_supplicant.wlan0.pid   -D nl80211,wext -c /etc/wpa_supplicant/wpa_supplicant.conf
+```
+
 ## Installing Software
 
 Once you have your network connection working,
