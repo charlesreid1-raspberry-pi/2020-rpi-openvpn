@@ -17,7 +17,7 @@ Notes on setting up a Raspberry Pi to create a wifi AP and tunnel all traffic th
 
 * The raspberry pi has one wifi card plugged in
 * The pi accesses the internet via the wifi card connected to an internet hotspot
-* The pi sets up an encrypted VPN tunnel with a VPN server (not included, see [this guide](https://github.com/charlesreid1/2020-openvpn-mfa-google-auth))
+* The pi sets up an encrypted VPN tunnel with a VPN server (VPN server not included, see [this guide](https://github.com/charlesreid1/2020-openvpn-mfa-google-auth) for setting one up)
 * All external traffic is handled by the VPN server
 
 ## Network Architecture
