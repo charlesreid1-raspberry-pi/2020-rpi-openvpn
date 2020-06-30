@@ -10,15 +10,15 @@ This document has multiple versions, each version is a different branch.
 
 * [Summary](#summary)
     * [Network Architecture](#network-architecture)
-* [Step\-by\-Step Guide](#step-by-step-guide)
+* [Step\-by\-Step Guide: PIA VPN Tunnel](#step-by-step-guide-pia-vpn-tunnel)
     * [Hardware](#hardware)
     * [Pi Network Configuration](#pi-network-configuration)
-    * [Installing Software](#installing-software)
     * [OpenVPN Client](#openvpn-client)
         * [OpenVPN Profile Setup](#openvpn-profile-setup)
         * [Update the Startup File](#update-the-startup-file)
         * [Test that it works](#test-that-it-works)
-        * [Enable VPN Service](#enable-vpn-service
+        * [Enable VPN Service](#enable-vpn-service)
+    * [How It Works](#how-it-works)
 
 # Summary
 
@@ -35,7 +35,7 @@ This document has multiple versions, each version is a different branch.
   and set up an encrypted tunnel. All external traffic from the pi is directed through
   this VPN tunnel.
 
-# Step-by-Step Guide
+# Step-by-Step Guide: PIA VPN Tunnel
 
 ## Hardware
 
@@ -168,8 +168,10 @@ Further suppose the pi has internet access via a router at 192.168.0.1, and has 
 192.168.0.199 assigned to it.
 
 If the pi sends a packet to 192.168.0.200, the traffic leaves the pi via the wireless network
-interface, and is sent to the gateway of the 192.168.0.0/24 network.
+interface, and is sent to the gateway of the 192.168.0.0/24 network, where it is forwarded on
+to 192.168.0.200.
 
 If the IP is not on the local network, i.e., anything but 192.168.0.0/24, it will be encrypted
 and sent through the tunnel interface that OpenVPN creates.
 
+# 
