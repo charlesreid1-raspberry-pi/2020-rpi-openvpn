@@ -85,14 +85,7 @@ sleep 3
 /sbin/wpa_supplicant   -i wlan0   -P /var/run/wpa_supplicant.wlan0.pid   -D nl80211,wext -c /etc/wpa_supplicant/wpa_supplicant.conf
 ```
 
-## Installing Software
-
-Once you have your network connection working,
-install some software:
-
-```
-sudo apt-get -y install openvpn
-```
+If you are running Raspbian, you should also touch a file named `ssh` in the boot partition of the SD card to start the SSH server.
 
 ## OpenVPN Client
 
