@@ -8,10 +8,13 @@ Notes on setting up a Raspberry Pi to create a wifi AP and tunnel all traffic th
     * [Network Architecture](#network-architecture)
 * [Step\-by\-Step Guide](#step-by-step-guide)
     * [Hardware](#hardware)
-    * [Connecting to the Pi](#connecting-to-the-pi)
-    * [Pi Internet Connection](#pi-internet-connection)
+    * [Pi Network Configuration](#pi-network-configuration)
+    * [Installing Software](#installing-software)
     * [OpenVPN Client](#openvpn-client)
-    * [Testing](#testing)
+        * [OpenVPN Profile Setup](#openvpn-profile-setup)
+        * [Update the Startup File](#update-the-startup-file)
+        * [Test that it works](#test-that-it-works)
+        * [Enable VPN Service](#enable-vpn-service
 
 # Summary
 
@@ -133,9 +136,14 @@ sed -i 's+^crl-verif crl.rsa.2048.pem+& /etc/openvpn/crl.rsa.2048.pem+' /etc/ope
 
 ### Update the Startup File
 
+If you are using an OpenVPN profile (.ovpn) to start the OpenVPN client, run the following command
+to use the .ovpn file instead of the .conf file:
+
 ```
 sed -s 's+\.conf+.ovpn+' /lib/systemd/system/openvpn@.service
 ```
+
+If you are using a .conf file, do not run this command.
 
 ### Test that it works
 
@@ -147,45 +155,11 @@ Run `curl -4 icanhazip.com` before and after you bring the VPN up to verify your
 openvpn --config /etc/openvpn/${PROFILE}.ovpn
 ```
 
+Note that you may have a config file (.conf) instead, in which case, use the config file instead of the .ovpn file.
+
 Use `curl -6 icanhazip.com` to test whether your IPv6 address has changed.
 
-### Configure iptables
-
-Modify the iptables on the Pi as follows:
-
-```
-# Allow loopback device (internal communication)
-sudo iptables -A INPUT -i lo -j ACCEPT
-sudo iptables -A OUTPUT -o lo -j ACCEPT
-
-# Allow all local traffic.
-sudo iptables -A INPUT -s 192.168.0.0/24 -j ACCEPT
-sudo iptables -A OUTPUT -d 192.168.0.0/24 -j ACCEPT
-
-# Allow VPN establishment
-# (Port 53 not necessary if you connect using an IP instead of a domain name)
-sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
-sudo iptables -A INPUT -p udp --sport 53 -j ACCEPT
-sudo iptables -A OUTPUT -p udp --dport 1198 -j ACCEPT
-sudo iptables -A INPUT -p udp --sport 1198 -j ACCEPT
-
-# Accept all connections through VPN
-sudo iptables -A OUTPUT -o tun+ -j ACCEPT
-sudo iptables -A INPUT -i tun+ -j ACCEPT
-
-# Set default policies to drop all communication unless specifically allowed
-sudo iptables -P INPUT DROP
-sudo iptables -P OUTPUT DROP
-sudo iptables -P FORWARD DROP
-```
-
-Make these persistent:
-
-```
-sudo apt-get -y install iptables-persistent
-sudo netfilter-persistent save
-sudo systemctl enable netfilter-persistent
-```
+### Enable VPN Service
 
 Enable this VPN client as a service that will start up on boot:
 
@@ -194,4 +168,20 @@ systemctl enable openvpn@${PROFILE}
 ```
 
 and finally, **reboot the Pi**.
+
+## How It Works
+
+When a program on the pi sends packets to an IP address, the pi will attempt to reach the
+IP address using each network interface (the `traceroute X.X.X.X` command will show the
+path the packet will take to its destination).
+
+Suppose the network giving the pi access to the internet is on the CIDR block 192.168.0.0/24.
+Further suppose the pi has internet access via a router at 192.168.0.1, and has an IP of
+192.168.0.199 assigned to it.
+
+If the pi sends a packet to 192.168.0.200, the traffic leaves the pi via the wireless network
+interface, and is sent to the gateway of the 192.168.0.0/24 network.
+
+If the IP is not on the local network, i.e., anything but 192.168.0.0/24, it will be encrypted
+and sent through the tunnel interface that OpenVPN creates.
 
