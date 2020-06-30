@@ -2,6 +2,10 @@
 
 Notes on setting up a Raspberry Pi to create a wifi AP and tunnel all traffic through OpenVPN.
 
+This document has multiple versions, each version is a different branch.
+
+* [pia-tunnel-only](https://github.com/charlesreid1-raspberry-pi/2020-rpi-openvpn-hostapd/tree/pia-tunnel-only): set up a VPN tunnel with PIA that routes all external traffic through the tunnel
+
 # Table of Contents
 
 * [Summary](#summary)
