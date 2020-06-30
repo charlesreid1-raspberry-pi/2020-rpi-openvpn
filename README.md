@@ -29,10 +29,10 @@ This document has multiple versions, each version is a different branch.
 
 ## Network Architecture
 
-* Client wifi network - Pi is connected as a client to an internet-connected wifi
-  network (or just plug the Pi into an ethernet wall jack)
-* VPN network - Pi uses client wifi network connection to connect to an OpenVPN server
-  and set up an encrypted tunnel. All external traffic from the Pi is directed through
+* Client wifi network - pi is connected as a client to an internet-connected wifi
+  network (or just plug the pi into an ethernet wall jack)
+* VPN network - pi uses client wifi network connection to connect to an OpenVPN server
+  and set up an encrypted tunnel. All external traffic from the pi is directed through
   this VPN tunnel.
 
 # Step-by-Step Guide
@@ -45,27 +45,11 @@ This document has multiple versions, each version is a different branch.
 
 ## Pi Network Configuration
 
-Easiest way to connect to the Pi is to edit the filesystem partition of the SD card, edit the `wpa_supplicant`
+Easiest way to connect to the pi is to edit the filesystem partition of the SD card, specifically edit the `wpa_supplicant`
 configuration file to automatically connect to the wifi network providing internet, and you can skip the next step
-because the Pi will already have an internet connection.
+because the pi will already have an internet connection.
 
-Create network interfaces in `/etc/network/interfaces`
-
-If you have a wifi card and an ethernet cable:
-
-```
-source /etc/network/interfaces.d/*
-
-# loopback
-auto lo
-iface lo inet loopback
-
-# ethernet - auto
-auto eth0
-iface eth0 inet dhcp
-```
-
-Connect to a WPA network by editing `/etc/wpa_supplicant/wpa_supplicant.conf`:
+Help the pi automatically connect to a WPA network by editing `/etc/wpa_supplicant/wpa_supplicant.conf`:
 
 ```
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
@@ -171,7 +155,7 @@ Enable this VPN client as a service that will start up on boot:
 systemctl enable openvpn@${PROFILE}
 ```
 
-and finally, **reboot the Pi**.
+and finally, **reboot the pi**.
 
 ## How It Works
 
