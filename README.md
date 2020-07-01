@@ -10,7 +10,7 @@ This document has multiple versions, each version is a different branch.
 
 * [Summary](#summary)
     * [Network Architecture](#network-architecture)
-* [Step\-by\-Step Guide: PIA VPN Tunnel](#step-by-step-guide-pia-vpn-tunnel)
+* [Step 1: VPN Tunnel](#step-1-vpn-tunnel)
     * [Hardware](#hardware)
     * [Pi Network Configuration](#pi-network-configuration)
     * [OpenVPN Client](#openvpn-client)
@@ -19,13 +19,23 @@ This document has multiple versions, each version is a different branch.
         * [Test that it works](#test-that-it-works)
         * [Enable VPN Service](#enable-vpn-service)
     * [How It Works](#how-it-works)
+* [Step 2: Wifi AP](#step-2-wifi-ap)
+
 
 # Summary
 
+* The raspberry pi has raspbian buster installed
 * The raspberry pi has one wifi card plugged in
 * The pi accesses the internet via the wifi card connected to an internet hotspot
 * The pi sets up an encrypted VPN tunnel with a VPN server (VPN server not included, see [this guide](https://github.com/charlesreid1/2020-openvpn-mfa-google-auth) for setting one up)
 * All external traffic is handled by the VPN server
+
+We cover the setup in 3 steps:
+
+* Establish VPN tunnel
+* Create wifi AP
+* Bridge wifi AP with VPN tunnel
+
 
 ## Network Architecture
 
@@ -35,13 +45,16 @@ This document has multiple versions, each version is a different branch.
   and set up an encrypted tunnel. All external traffic from the pi is directed through
   this VPN tunnel.
 
-# Step-by-Step Guide: PIA VPN Tunnel
+
+# Step 1: VPN Tunnel
+
 
 ## Hardware
 
 * Raspberry Pi
 * 1-2 wifi dongles
 * Ethernet cable (optional)
+
 
 ## Pi Network Configuration
 
@@ -78,12 +91,14 @@ sleep 3
 
 If you are running Raspbian, you should also touch a file named `ssh` in the boot partition of the SD card to start the SSH server.
 
+
 ## OpenVPN Client
 
 To set up the OpenVPN client, obtain your OpenVPN profile file (`*.ovpn`) and your server certificate
 file (`*.ca`). We illustrate using Private Internet Access, a third party VPN provider, as an example.
 
 The commands below should be run by the root user.
+
 
 ### OpenVPN Profile Setup
 
@@ -122,6 +137,7 @@ sed -i 's+^ca ca.rsa.2048.crt+& /etc/openvpn/ca.rsa.2048.crt+' /etc/openvpn/${PR
 sed -i 's+^crl-verif crl.rsa.2048.pem+& /etc/openvpn/crl.rsa.2048.pem+' /etc/openvpn/${PROFILE}.ovpn
 ```
 
+
 ### Update the Startup File
 
 If you are using an OpenVPN profile (.ovpn) to start the OpenVPN client, run the following command
@@ -132,6 +148,7 @@ sed -s 's+\.conf+.ovpn+' /lib/systemd/system/openvpn@.service
 ```
 
 If you are using a .conf file, do not run this command.
+
 
 ### Test that it works
 
@@ -147,6 +164,7 @@ Note that you may have a config file (.conf) instead, in which case, use the con
 
 Use `curl -6 icanhazip.com` to test whether your IPv6 address has changed.
 
+
 ### Enable VPN Service
 
 Enable this VPN client as a service that will start up on boot:
@@ -156,6 +174,7 @@ systemctl enable openvpn@${PROFILE}
 ```
 
 and finally, **reboot the pi**.
+
 
 ## How It Works
 
@@ -174,4 +193,111 @@ to 192.168.0.200.
 If the IP is not on the local network, i.e., anything but 192.168.0.0/24, it will be encrypted
 and sent through the tunnel interface that OpenVPN creates.
 
-# 
+
+# Step 2: Wifi AP
+
+In the next section, we cover the setup of a wireless access point (AP) using `hostapd` and
+a few other utilities necessary to properly run a wireless network.
+
+We don't cover the bridging until 
+
+The checklist to set up an access point is as follows:
+
+* Configure DNS server (`dhcpd`)
+* Configure DHCP server (`isc-dhcp-server`)
+* Configure Access Point (`hostapd`)
+
+The network configuration is as follows:
+
+* 192.168.0.0/24 is the home network's CIDR block
+    * 192.168.0.1 is the gateway of the home network
+    * 192.168.0.199 is the example IP assigned the raspberry pi
+
+* 192.168.10.0/24 is the new wifi network's CIDR block
+    * 192.168.10.1 is the gateway, which is the raspberry pi
+    * 192.168.10.99 is a client on the new wifi network
+
+## Install Software
+
+Install required software:
+
+```
+apt-get update
+apt-get -y install udhcpd isc-dhcp-server hostapd
+```
+
+## Configure DNS and DHCP
+
+Edit `/etc/dhcpcd.conf` to configure `dhcpcd` on Raspbian Buster.
+
+```
+$ cat /etc/dhcpcd.conf
+hostname "LAN10"
+clientid
+persistent
+option rapid_commit
+option domain_name_servers, domain_name, domain_search, host_name
+option classless_static_routes
+option interface_mtu
+require dhcp_server_identifier
+slaac private
+
+# Custom static IP address for wlan1.
+interface wlan1
+static ip_address=192.168.10.1/24
+static routers=192.168.10.1
+static domain_name_servers=192.168.10.1
+```
+
+Configure the DNS server in the `dhcpd` configuration file
+`/etc/dhcpd.conf`:
+
+
+```
+# DHCP config file for raspberry pi
+
+ddns-update-style none;
+default-lease-time 600;
+max-lease-time 7200;
+
+authoritative;
+
+# hand out IP addresses in range 192.168.10.10 to 192.168.10.50
+subnet 192.168.10.0 netmask 255.255.255.0 {
+    range 192.168.10.10 192.168.10.50;
+    option broadcast-address 192.168.10.255;
+    option routers 192.168.10.1;
+    default-lease-time 600;
+    max-lease-time 7200;
+    option domain-name "dis-mah-network";
+    # use the googz
+    option domain-name-servers 8.8.8.8 8.8.4.4;
+}
+```
+
+## Configure DHCP
+
+Configure the DHCP server in the DHCP server configuration file 
+`/etc/default/isc-dhcp-server`:
+
+```
+DHCPDv4_CONF=/etc/dhcp/dhcpd.conf
+DHCPDv4_PID=/var/run/dhcpd.pid
+INTERFACESv4="wlan0"
+```
+
+(Ignoring v6 for now to keep it simple.)
+
+## Configure Wireless AP
+
+Configure the access point in the `hostapd` configuration file
+`/etc/hostapd/hostapd.conf`:
+
+```
+interface=wlan0
+wpa=1
+ssid=<NAME-OF-NEW-WIFI-AP-HERE>
+channel=1
+wpa_passphrase=<PASSPHRASE-OF-NEW-WIFI-AP-HERE>
+```
+
