@@ -1,6 +1,6 @@
-# 2020-rpi-openvpn-hostapd
+# 2020-rpi-openvpn
 
-Notes on setting up a Raspberry Pi to create a wifi AP and tunnel all traffic through OpenVPN.
+Notes on setting up a Raspberry Pi to create a VPN tunnel to tunnel all traffic through OpenVPN.
 
 This document has multiple versions, each version is a different branch.
 
@@ -9,8 +9,7 @@ This document has multiple versions, each version is a different branch.
 # Table of Contents
 
 * [Summary](#summary)
-    * [Network Architecture](#network-architecture)
-* [Step 1: VPN Tunnel](#step-1-vpn-tunnel)
+* [VPN Tunnel](#vpn-tunnel)
     * [Hardware](#hardware)
     * [Pi Network Configuration](#pi-network-configuration)
     * [OpenVPN Client](#openvpn-client)
@@ -26,27 +25,12 @@ This document has multiple versions, each version is a different branch.
 
 * The raspberry pi has raspbian buster installed
 * The raspberry pi has one wifi card plugged in
-* The pi accesses the internet via the wifi card connected to an internet hotspot
+* The pi accesses the internet via the wifi card connected to an internet-connected network
 * The pi sets up an encrypted VPN tunnel with a VPN server (VPN server not included, see [this guide](https://github.com/charlesreid1/2020-openvpn-mfa-google-auth) for setting one up)
-* All external traffic is handled by the VPN server
-
-We cover the setup in 3 steps:
-
-* Establish VPN tunnel
-* Create wifi AP
-* Bridge wifi AP with VPN tunnel
+* All external traffic passes through the VPN tunnel
 
 
-## Network Architecture
-
-* Client wifi network - pi is connected as a client to an internet-connected wifi
-  network (or just plug the pi into an ethernet wall jack)
-* VPN network - pi uses client wifi network connection to connect to an OpenVPN server
-  and set up an encrypted tunnel. All external traffic from the pi is directed through
-  this VPN tunnel.
-
-
-# Step 1: VPN Tunnel
+# VPN Tunnel
 
 
 ## Hardware
@@ -126,6 +110,7 @@ Now add login credentials to a login file:
 touch /etc/openvpn/login
 echo "USERNAME" >> /etc/openvpn/login
 echo "PASSWORD" >> /etc/openvpn/login
+chmod 600 /etc/openvpn/login
 ```
 
 Finally, modify the configuration file to use this credentials file, and to point to the correct
@@ -144,7 +129,7 @@ If you are using an OpenVPN profile (.ovpn) to start the OpenVPN client, run the
 to use the .ovpn file instead of the .conf file:
 
 ```
-sed -s 's+\.conf+.ovpn+' /lib/systemd/system/openvpn@.service
+sed -i 's+\.conf+.ovpn+' /lib/systemd/system/openvpn@.service
 ```
 
 If you are using a .conf file, do not run this command.
